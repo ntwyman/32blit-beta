@@ -1,4 +1,28 @@
 #include <cstdint>
+#include "32blit.hpp"
+
+// Position of sprites in the Sheet. Expressed in 8x8 pixel strides
+const blit::rect& SpriteEgg = blit::rect(9,2,1,1);
+const blit::rect& SpriteWall = blit::rect(9,0,1,1);
+const blit::rect& SpriteLadder = blit::rect(9,1,1,1);
+const blit::rect& SpriteGrain = blit::rect(9,3,1,1);
+const blit::rect& SpriteScore = blit::rect(4,7,3,2);
+const blit::rect& SpriteBlank = blit::rect(4,10,4,2);
+const blit::rect& SpritePlayer = blit::rect(0,10,4,2);
+const blit::rect& SpriteLevel = blit::rect(0,12,5,2);
+
+blit::rect SpriteDigits[] = {
+    {0, 9, 1, 1},
+    {1, 9, 1, 1},
+    {2, 9, 1, 1},
+    {3, 9, 1, 1},
+    {4, 9, 1, 1},
+    {5, 9, 1, 1},
+    {6, 9, 1, 1},
+    {7, 9, 1, 1},
+    {8, 9, 1, 1},
+    {9, 9, 1, 1}
+};
 
 uint8_t egg_sheet[] = {
     0x53, 0x50, 0x52, 0x49, 0x54, 0x45, 0x50, 0x4b, // type: spritepk (packed, paletted sprite)
