@@ -5,7 +5,7 @@
 #include <array>
 #include <stdint.h>
 
-#ifdef WIN32
+#ifdef WIN32 
 #define __attribute__(A)
 #endif
 
@@ -13,8 +13,6 @@
 #include "../types/size.hpp"
 #include "../types/pixel_format.hpp"
 #include "../graphics/blend.hpp"
-
-using namespace blit;
 
 namespace blit {
 

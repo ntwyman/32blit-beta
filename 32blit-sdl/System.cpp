@@ -9,13 +9,22 @@
 
 
 // blit framebuffer memory
-rgb565 __ltdc_buffer[320 * 240 * 2];
-surface __ltdc((uint8_t *)__ltdc_buffer, pixel_format::RGB565, size(320, 240));
-surface __fb((uint8_t *)__ltdc_buffer + (320 * 240 * 2), pixel_format::RGB, size(160, 120));
+blit::rgb565 __ltdc_buffer[320 * 240 * 2];
+blit::surface __ltdc((uint8_t *)__ltdc_buffer, blit::pixel_format::RGB565, blit::size(320, 240));
+blit::surface __fb((uint8_t *)__ltdc_buffer + (320 * 240 * 2), blit::pixel_format::RGB, blit::size(160, 120));
 
 // blit debug callback
 void debug(std::string message) {
 	std::cout << message << std::endl;
+}
+
+int blit_debugf(const char * psFormatString, ...)
+{
+	va_list args;
+	va_start(args, psFormatString);
+	int ret = vprintf(psFormatString, args);
+	va_end(args);
+	return ret;
 }
 
 // blit screenmode callback
@@ -93,6 +102,7 @@ void System::run() {
 	blit::now = ::now;
 	blit::random = ::blit_random;
 	blit::debug = ::debug;
+	blit::debugf = ::blit_debugf;
 	blit::set_screen_mode = ::set_screen_mode;
 	blit::update = ::update;
 	blit::render = ::render;
@@ -110,7 +120,8 @@ void System::run() {
 int System::timer_thread() {
 	// Signal the system loop every 20 msec.
 	int dropped = 0;
-	SDL_Event event = {.type = timer_event};
+	SDL_Event event = {};
+	event.type = timer_event;
 
 	while (SDL_SemWaitTimeout(s_timer_stop, 20)) {
 		if (SDL_SemValue(s_loop_update)) {
@@ -135,7 +146,8 @@ int System::timer_thread() {
 
 int System::update_thread() {
 	// Run the blit user code once every time we are signalled.
-	SDL_Event event = {.type = loop_event};
+	SDL_Event event = {};
+	event.type = loop_event;
 
 	::init(); // Run init here because the user can make it hang.
 

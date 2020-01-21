@@ -31,7 +31,7 @@
 #include "rng.h"
 #include "spi.h"
 #include "tim.h"
-#include "usb_otg.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -124,7 +124,7 @@ int main(void)
   MX_FATFS_Init();
   //MX_DMA2D_Init();
   MX_RNG_Init();
-
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
   blit_clear_framebuffer();
   blit_init();
@@ -240,7 +240,7 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.PLL3.PLL3N = 129;
   PeriphClkInitStruct.PLL3.PLL3P = 2;
   PeriphClkInitStruct.PLL3.PLL3Q = 2;
-  PeriphClkInitStruct.PLL3.PLL3R = 28;
+  PeriphClkInitStruct.PLL3.PLL3R = 53;
   PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
   PeriphClkInitStruct.PLL3.PLL3FRACN = 0;

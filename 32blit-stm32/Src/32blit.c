@@ -17,6 +17,7 @@
 #include "32blit.hpp"
 #include "graphics/color.hpp"
 
+#include "stdarg.h"
 using namespace blit;
 
 __attribute__((section(".dac_data"))) uint16_t dac_buffer[DAC_BUFFER_SIZE];
@@ -33,7 +34,7 @@ FRESULT SD_FileOpenError = FR_INVALID_PARAMETER;
 uint32_t total_samples = 0;
 uint8_t dma_status = 0;
 
-blit::screen_mode mode = blit::screen_mode::lores;
+static blit::screen_mode mode = blit::screen_mode::lores;
 
 /* configure the screen surface to point at the reserved LTDC framebuffer */
 surface __ltdc((uint8_t *)&__ltdc_start, pixel_format::RGB565, size(320, 240));
@@ -51,7 +52,16 @@ void DFUBoot(void)
   NVIC_SystemReset();
 }
 
+int blit_debugf(const char * psFormatString, ...)
+{
+	va_list args;
+	va_start(args, psFormatString);
+	int ret = vprintf(psFormatString, args);
+	va_end(args);
+	return ret;
+}
 void blit_debug(std::string message) {
+	printf(message.c_str());
     fb.pen(rgba(255, 255, 255));
     fb.text(message, &minimal_font[0][0], point(0, 0));
 }
@@ -158,6 +168,7 @@ void blit_init() {
     blit::backlight = 1.0f;
     blit::volume = 1.5f / 16.0f;
     blit::debug = blit_debug;
+    blit::debugf = blit_debugf;
     blit::now = HAL_GetTick;
     blit::random = HAL_GetRandom;
     blit::set_screen_mode = ::set_screen_mode;
@@ -357,6 +368,10 @@ void blit_flip() {
     } else {
         // LORES mode
 
+        // wait for next frame if LTDC hardware currently drawing, ensures
+        // no tearing
+        while (!(LTDC->CDSR & LTDC_CDSR_VSYNCS));
+
         // pixel double the framebuffer to the LTDC buffer
         rgb *src = (rgb *)blit::fb.data;
 
@@ -379,10 +394,6 @@ void blit_flip() {
         }
 
         SCB_CleanInvalidateDCache_by_Addr((uint32_t *)&__ltdc_start, 320 * 240 * 2);
-
-        // wait for next frame if LTDC hardware currently drawing, ensures
-        // no tearing
-        while (!(LTDC->CDSR & LTDC_CDSR_VSYNCS));
 
         // set the LTDC layer framebuffer pointer shadow register
         LTDC_Layer1->CFBAR = (uint32_t)(&__ltdc_start);
