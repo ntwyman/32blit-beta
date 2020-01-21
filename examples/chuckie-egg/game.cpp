@@ -1098,13 +1098,20 @@ extern const rect &SpriteGrain;
 extern const rect &SpriteScore;
 extern const rect &SpriteBlank;
 extern const rect &SpritePlayer;
+extern const rect &SpriteBonus;
 extern const rect &SpriteLevel;
+extern const rect &SpriteTime;
+extern const rect &SpriteCage;
+extern const rect &SpriteCageOpen;
+
 extern rect SpriteDigits[];
 
-void Game::LoadLevel(int levelNumber) {
+void Game::LoadLevel(int levelNumber)
+{
 
   // Clear out the existing tiles
   bzero(&this->tiles[0], sizeof(this->tiles));
+  this->hasBigDuck = levelNumber > 7;
 
   /* Get faster as we go up through the levels
   i = level_index >> 4;
@@ -1125,32 +1132,38 @@ void Game::LoadLevel(int levelNumber) {
   this->numDucks = *(p++);
 
   int x, y;
-  while (num_walls--) {
+  while (num_walls--)
+  {
     y = *(p++);       // row
     x = *(p++);       // first column
     int end = *(p++); // last column
-    while (x <= end) {
+    while (x <= end)
+    {
       setTile(x, y, TILE_WALL);
       x++;
     }
   }
 
-  while (num_ladders--) {
+  while (num_ladders--)
+  {
     x = *(p++);
     y = *(p++);
     int end = *(p++);
-    while (y <= end) {
+    while (y <= end)
+    {
       addToTile(x, y, TILE_LADDER);
       y++;
     }
   }
 
-  if (hasLift) {
+  if (hasLift)
+  {
     this->liftX = int(*(p++)) << 3;
   }
 
   int eggsLeft = 0;
-  for (int i = 0; i < NUM_EGGS; i++) {
+  for (int i = 0; i < NUM_EGGS; i++)
+  {
     x = *(p++);
     y = *(p++);
     setTile(x, y, (i << 4) | TILE_EGG);
@@ -1161,7 +1174,8 @@ void Game::LoadLevel(int levelNumber) {
     */
   }
 
-  for (int i = 0; i < this->numGrain; i++) {
+  for (int i = 0; i < this->numGrain; i++)
+  {
     x = *(p++);
     y = *(p++);
     setTile(x, y, (i << 4) | TILE_GRAIN);
@@ -1171,41 +1185,78 @@ void Game::LoadLevel(int levelNumber) {
     */
   }
 
-  for (int i = 0; i < MAX_DUCKS; i++) {
+  for (int i = 0; i < MAX_DUCKS; i++)
+  {
     ducks[i].tileX = *(p++);
     ducks[i].tileY = *(p++);
   }
+  this->currentLevel = levelNumber;
 }
 
-void Game::renderBackground(surface &fb) {
+void Game::renderBackground(surface &fb)
+{
   // WARNING MAGIC NUMBERS ABOUND
+
+  // Score
   fb.sprite(SpriteScore, point(0, 0));
   fb.sprite(SpriteBlank, point(27, 0));
+
+  // Player
   fb.sprite(SpritePlayer, point(0, 12));
   fb.sprite(SpriteDigits[this->currentPlayer + 1], point(27, 13));
+
+  // Level
   fb.sprite(SpriteLevel, point(36, 12));
-}
+  int n = this->currentLevel + 1;
+  fb.sprite(SpriteDigits[n % 10], point(69, 13));
+  n /= 10;
+  fb.sprite(SpriteDigits[n % 10], point(64, 13));
+  if (n > 10)
+  {
+    fb.sprite(SpriteDigits[n % 10], point(59, 13));
+  }
 
-void Game::Render(surface &fb) {
+  // Bonus
+  fb.sprite(SpriteBonus, point(78, 12));
+  fb.sprite(SpriteDigits[0], point(117, 13));
 
-  this->renderBackground(fb);
-  for (int x = 0; x < COLUMNS; x++) {
-    for (int y = 0; y < ROWS; y++) {
+  // Time
+  fb.sprite(SpriteTime, point(126, 12));
+
+  // Level deets
+  for (int x = 0; x < COLUMNS; x++)
+  {
+    for (int y = 0; y < ROWS; y++)
+    {
       const point &pos =
           point(x * TILE_STRIDE, fb.bounds.h - ((y + 1) * TILE_STRIDE));
       uint8_t tile = getTile(x, y);
-      if (tile & TILE_WALL) {
+      if (tile & TILE_WALL)
+      {
         fb.sprite(SpriteWall, pos);
       }
-      if (tile & TILE_LADDER) {
+      if (tile & TILE_LADDER)
+      {
         fb.sprite(SpriteLadder, pos);
       }
-      if (tile & TILE_EGG) {
+      if (tile & TILE_EGG)
+      {
         fb.sprite(SpriteEgg, pos);
       }
-      if (tile & TILE_GRAIN) {
+      if (tile & TILE_GRAIN)
+      {
         fb.sprite(SpriteGrain, pos);
       }
     }
   }
+
+  //  Cage
+  const rect &cageSprite = this->hasBigDuck ? SpriteCageOpen : SpriteCage;
+  fb.sprite(cageSprite, point(0, 20));
+}
+
+void Game::Render(surface &fb)
+{
+
+  this->renderBackground(fb);
 }

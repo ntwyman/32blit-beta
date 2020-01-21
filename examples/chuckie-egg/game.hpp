@@ -51,11 +51,17 @@ private:
 
   void renderBackground(blit::surface &);
 
+  // state
+  int currentLevel;
+  int currentPlayer;
+
+  // Level info
   bool hasLift;
   int numGrain;
   int numDucks;
   int liftX;
-  int currentPlayer;
+  bool hasBigDuck;
+
   uint8_t tiles[ROWS * COLUMNS];
   Duck ducks[MAX_DUCKS];
   Player playerData[MAX_PLAYERS];
