@@ -1,5 +1,5 @@
 #include "game.hpp"
-
+using namespace blit;
 const uint8_t level1[] = {/* 0cd0 */
                           /*0x0cd0*/ 0x0d,
                           0x04,

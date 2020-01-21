@@ -13,7 +13,7 @@
 
 class Game {
 public:
-  void Render(surface &);
+  void Render(blit::surface &);
   // void Tickle();
   void LoadLevel(int levelNumber);
 
