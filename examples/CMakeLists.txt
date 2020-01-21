@@ -1,3 +1,4 @@
+add_subdirectory(chuckie-egg)
 add_subdirectory(doom-fire)
 add_subdirectory(rotozoom)
 add_subdirectory(fizzlefade)

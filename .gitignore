@@ -333,3 +333,6 @@ ASALocalRun/
 # Object files and other build cruft
 *.o
 lib32blit.a
+
+# macOS 
+.DS_Store
