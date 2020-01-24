@@ -1217,8 +1217,8 @@ void Game::LoadLevel(int levelNumber)
 
   if (this->hasLift)
   {
-    this->liftY[0] = 8;
-    this->liftY[1] = 0x5a;
+    this->liftY[0] = 232;
+    this->liftY[1] = 142;
     currentLift = 0;
   }
 
@@ -1386,12 +1386,11 @@ void Game::renderLifts(surface &fb) {
       fb.sprite(SpriteLift, point(this->liftX, this->liftY[0]));
       fb.sprite(SpriteLift, point(this->liftX, this->liftY[1]));
     }
-
 }
 
 void Game::Render(surface &fb) {
   this->renderBackground(fb);
   this->renderDucks(fb);
   this->renderHenry(fb);
-  this->renderLifts(fb);
+  this->renderLifts (fb);
 }
