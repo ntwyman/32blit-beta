@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <iostream>
 #include "32blit.hpp"
 
 // Position of sprites in the Sheet. Expressed in 8x8 pixel strides
@@ -14,6 +15,13 @@ const blit::rect& SpriteBonus = blit::rect(5,12,6,2);
 const blit::rect& SpriteTime = blit::rect(0,14,4,2);
 const blit::rect& SpriteCage = blit::rect(0,0,3,6);
 const blit::rect& SpriteCageOpen = blit::rect(3,0,3,6);
+const blit::rect& SpriteDuck = blit::rect(8,0,1,3);
+const blit::rect& SpriteDuckStep = blit::rect(8,3,1,3);
+const blit::rect& SpriteDuckUp = blit::rect(10,0,1,3);
+const blit::rect& SpriteDuckUpStep = blit::rect(10,3,1,3);
+const blit::rect& SpriteDuckEat = blit::rect(7,6,2,3);
+const blit::rect& SpriteDuckEat2 = blit::rect(9,6,2,3);
+const blit::rect& SpriteLift = blit::rect(4,6,2,1);
 
 blit::rect SpriteDigits[] = {
     {0, 9, 1, 1},
@@ -28,9 +36,22 @@ blit::rect SpriteDigits[] = {
     {9, 9, 1, 1}
 };
 
+blit::rect SpriteHenryWalks[] = {
+    { 6, 0, 1, 2},
+    { 6, 2, 1, 2},
+    { 6, 0, 1, 2},
+    { 6, 4, 1, 2}
+};
+blit::rect SpriteHenryClimbs[] = {
+    { 7, 0, 1, 2},
+    { 7, 2, 1, 2},
+    { 7, 0, 1, 2},
+    { 7, 4, 1, 2}
+};
+
 uint8_t egg_sheet[] = {
     0x53, 0x50, 0x52, 0x49, 0x54, 0x45, 0x50, 0x4b, // type: spritepk (packed, paletted sprite)
-    0xac, 0x10, // payload size (4037)
+    0xac, 0x10, // 4268
 
     0x58, 0x00, // width (88)
     0x80, 0x00, // height (128)
@@ -314,3 +335,7 @@ uint8_t egg_sheet[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
+uint8_t *getSpriteData() {
+    std::cout << "Size of sprite: " << sizeof(egg_sheet) << std::endl;
+    return egg_sheet;
+}
