@@ -17,6 +17,13 @@ const point Game::tilePosition(point &tile) {
   return this->tilePosition(tile.x, tile.y);
 }
 
+unsigned int Game::getTile(int x, int y) {
+  if (x < 0 || x >= COLUMNS || y < 0 || y >= ROWS) {
+    return 0;
+  }
+  return tiles[y * COLUMNS + x];
+}
+
 void Game::loadLevel(int levelNumber) {
 
   // Clear out the existing tiles
@@ -319,34 +326,172 @@ void Game::moveHenry() {
     h.speed.y++;
   }
   h.speed.y *= 2;
-  /*
   switch (h.state) {
   case HenryState::JUMP:
-    this->jumpHenry();
+    this->jumpHenry(h);
     break;
   case HenryState::FALL:
-    h.falling++;
-    int tmp = h.falling;
-    if (tmp < 4) {
-      h.speed.x = h.sliding;
-      h.speed.y = -1;
-    }
+    this->fallHenry(h);
+    break;
+  case HenryState::CLIMB:
+    this->climbHenry(h);
+    break;
+  case HenryState::WALK:
+    this->walkHenry(h);
+    break;
+  case HenryState::LIFT:
+    this->liftHenry(h);
+    break;
   }
-  */
+  this->animateHenry(h);
 }
 
-void Game::jumpHenry() {
+void Game::jumpHenry(Henry &) {
   // FOR NWO
 }
+
+void Game::fallHenry(Henry &h) {
+  h.falling++;
+  int rate = h.falling;
+  if (rate < 4) {
+    h.speed.x = h.sliding;
+    h.speed.y = -1;
+  } else {
+    h.speed.x = 0;
+    rate = h.falling >> 2;
+    if (rate > 3) {
+      rate = 3;
+    }
+    h.speed.y = -(rate + 1);
+  }
+
+  // Check what's in the next tile down
+  if ((h.speed.y + h.partial.y) <= 0) {
+    if (this->getTile(h.tile.x, h.tile.y - 1) & TILE_WALL) {
+      h.state = HenryState::WALK;
+      h.speed.y = -h.partial.y;
+    }
+  }
+}
+
+bool Game::startJump(Henry &h) {
+  if ((buttons & BUTTON_JUMP) == 0) {
+    return false;
+  }
+  this->buttonAck |= 0x10; // FOR NOW What is this ?
+  h.falling = 0;
+  h.state = HenryState::JUMP;
+  h.sliding = h.speed.x;
+  if (h.sliding > 0) {
+    h.dir = DIR_R;
+  } else if (h.sliding < 0) {
+    h.dir = DIR_L;
+  }
+  this->jumpHenry(h);
+  return true;
+}
+
+void Game::climbHenry(Henry &h) {
+  if (this->startJump(h)) {
+    return;
+  }
+  // Want to get off
+  if (h.speed.x != 0 && h.partial.y == 0) {
+    if (this->getTile(h.tile.x, h.tile.y - 1) & TILE_WALL) {
+      h.speed.y = 0;
+      h.state = HenryState::WALK;
+    }
+  }
+
+  if (h.state != HenryState::WALK) {
+    h.speed.x = 0;
+    point checkTile = h.tile;
+    if (h.speed.y >= 0) {
+      checkTile.y += 2;
+    } else {
+      checkTile.y -= 1;
+    }
+    if ((this->getTile(checkTile.x, checkTile.y) & TILE_LADDER) == 0) {
+      h.speed.y = 0;
+    }
+  }
+  h.dir = h.speed.y >= 0 ? DIR_UP : DIR_DOWN;
+}
+
+void Game::walkHenry(Henry &h) {
+  if (this->startJump(h)) {
+    return;
+  }
+
+  if (h.speed.y != 0) { // Trying to climb
+    if (h.partial.x == 3) {
+      int y = h.tile.y + (h.speed.y > 0 ? 2 : -1);
+      if (this->getTile(h.tile.x, y) & TILE_LADDER) {
+        h.speed.x = 0;
+        h.state = HenryState::CLIMB;
+        return;
+      }
+      h.speed.y = 0;
+    }
+  }
+
+  int newPartialX = h.partial.x + h.speed.x;
+  int tileX = h.tile.x;
+  if (newPartialX < 0) {
+    tileX -= 1;
+  } else if (newPartialX >= 8) {
+    tileX++;
+  }
+  if ((this->getTile(tileX, h.tile.y - 1) & TILE_WALL) == 0) {
+    if ((newPartialX & 7) < 4) {
+      h.sliding = 1;
+      h.falling = 1;
+    } else {
+      h.sliding = -1;
+      h.falling = 0;
+    }
+    h.state = HenryState::FALL;
+  }
+  if (this->cannotMoveSideways(h)) {
+    h.speed.x = 0;
+  }
+  if (h.speed.x > 0) {
+    h.dir = DIR_R;
+  } else if (h.speed.x < 0) {
+    h.dir = DIR_L;
+  }
+}
+
+void Game::liftHenry(Henry &h) {
+  if (this->startJump(h)) {
+    return;
+  }
+}
+
+void Game::animateHenry(Henry &h) {}
+
+bool Game::cannotMoveSideways(Henry &h) {
+  if (h.speed.x == 0) {
+    return false;
+  }
+  if (h.speed.x < 0) {
+    if (h.pos.x == 0) {
+      return true;
+    }
+    if (h.partial.x >= 2 || h.speed.y == 2) {
+      return false;
+    }
+  }
+  return false;
+}
+
 void Game::Tickle(uint32_t time)
 /*
 The Update tick - runs roughly every 10 ms
 */
 {
-  // First time, just note the time.
   if (this->lastTime == 0) {
     this->lastTime = time;
-    return;
   }
 
   // Wait until roughly 3/100ths of a second has gone by
@@ -355,4 +500,5 @@ The Update tick - runs roughly every 10 ms
   }
 
   this->pollKeys();
+  this->moveHenry();
 }

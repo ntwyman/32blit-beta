@@ -3,7 +3,7 @@
 #include <cstdint>
 
 // Game frame rate was 3/100ths of a second
-#define UPDATE_INTERVAL_MS 30 
+#define UPDATE_INTERVAL_MS 30
 
 #define ROWS 25
 #define COLUMNS 20
@@ -19,11 +19,11 @@
 #define NUM_EGGS 12
 
 /*** Game interface.  */
-#define BUTTON_RIGHT  1
-#define BUTTON_LEFT   2
-#define BUTTON_DOWN   4
-#define BUTTON_UP     8
-#define BUTTON_JUMP   0x10
+#define BUTTON_RIGHT 1
+#define BUTTON_LEFT 2
+#define BUTTON_DOWN 4
+#define BUTTON_UP 8
+#define BUTTON_JUMP 0x10
 /* extern uint8_t buttons;
 extern uint8_t button_ack;
 extern int cheat;
@@ -38,13 +38,7 @@ extern int skip_frame;
 #define DIR_HORIZ (DIR_R | DIR_L)
 #define DIR_VERT (DIR_UP | DIR_DOWN)
 
-enum HenryState {
-  WALK,
-  CLIMB,
-  JUMP,
-  FALL,
-  LIFT
-};
+enum HenryState { WALK, CLIMB, JUMP, FALL, LIFT };
 
 struct Henry {
   blit::point pos;
@@ -57,8 +51,7 @@ struct Henry {
   int sliding;
 };
 
-struct Player
-{
+struct Player {
   uint8_t score[8];
   uint8_t bonus[4];
   uint8_t egg[16];
@@ -68,48 +61,34 @@ struct Player
 
 // NOTE: EAT1 should never be rendered but is used in the state
 // machine for duck eating animation
-enum DuckState
-{
-  BORED,
-  STEP,
-  EAT1,
-  EAT2,
-  EAT3,
-  EAT4
-};
+enum DuckState { BORED, STEP, EAT1, EAT2, EAT3, EAT4 };
 
-struct Duck
-{
+struct Duck {
   blit::point pos;
   blit::point tile;
   DuckState state;
   int dir;
 };
 
-struct BigDuck
-{
+struct BigDuck {
   blit::point pos;
   vec2 dPos;
   int dir;
   int frame;
 };
 
-
-class Game
-{
+class Game {
 public:
   Game(blit::size &);
   void Render(blit::surface &);
   void Tickle(uint32_t);
 
 private:
-  inline unsigned int getTile(int x, int y) { return tiles[y * COLUMNS + x]; }
-  inline void setTile(int x, int y, uint8_t tile)
-  {
+  unsigned int getTile(int x, int y);
+  inline void setTile(int x, int y, uint8_t tile) {
     tiles[y * COLUMNS + x] = tile;
   }
-  inline void addToTile(int x, int y, uint8_t contents)
-  {
+  inline void addToTile(int x, int y, uint8_t contents) {
     tiles[y * COLUMNS + x] |= contents;
   }
 
@@ -122,7 +101,15 @@ private:
 
   void pollKeys();
   void moveHenry();
-  void jumpHenry();
+  bool startJump(Henry &);
+  void jumpHenry(Henry &);
+  void fallHenry(Henry &);
+  void climbHenry(Henry &);
+  void walkHenry(Henry &);
+  void liftHenry(Henry &);
+  void animateHenry(Henry &);
+
+  bool cannotMoveSideways(Henry &h);
 
   const blit::point tilePosition(blit::point &);
   const blit::point tilePosition(int, int);
@@ -133,8 +120,9 @@ private:
   // Uodate timing
   uint32_t lastTime;
 
-  // input 
+  // input
   int buttonsDown;
+  int buttonAck; // ???
   // int numPlayers
 
   // Level info
