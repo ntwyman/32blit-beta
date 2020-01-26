@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <iostream>
 #include "32blit.hpp"
 #include "sprites.hpp"
 
