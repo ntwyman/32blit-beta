@@ -93,7 +93,7 @@ static const uint8_t level8[] = {
 static const uint8_t *const levels[8] = {&level1[0], &level2[0], &level3[0], &level4[0],
                                          &level5[0], &level6[0], &level7[0], &level8[0]};
 
-const uint8_t *getLevelData(int level) {
+const uint8_t *getLevelData(unsigned int level) {
     return levels[level];
 }
 
