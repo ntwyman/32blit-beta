@@ -31,6 +31,9 @@ extern int cheat;
 extern int skip_frame;
 */
 
+// Offset into tile to get on ladder
+#define LADDER_PARTIAL_X 0
+
 /* Direction bitflags  */
 #define DIR_L 1
 #define DIR_R 2
@@ -86,6 +89,7 @@ public:
 
 private:
   unsigned int getTile(int x, int y);
+  bool isTileWall(int x, int y);
   inline void setTile(int x, int y, uint8_t tile) {
     tiles[y * COLUMNS + x] = tile;
   }
@@ -110,7 +114,8 @@ private:
   void animateHenry(Henry &);
 
   void addScore(int, int);
-  bool cannotMove(Henry &h);
+  bool cannotMove(Henry &);
+  bool canGrabLadder(Henry &, int16_t);
 
   blit::point tilePosition(blit::point &);
   blit::point tilePosition(int, int);
@@ -134,7 +139,6 @@ private:
   int liftY[2];
   int currentLift;
   bool hasBigDuck;
-  char debugMsg[100] = {0};
 
   // state
   uint16_t currentLevel;
