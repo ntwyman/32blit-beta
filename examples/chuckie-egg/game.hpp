@@ -24,6 +24,7 @@
 #define BUTTON_DOWN 0x04u
 #define BUTTON_UP 0x08u
 #define BUTTON_JUMP 0x10u
+#define BUTTONS_ALL (BUTTON_RIGHT | BUTTON_LEFT | BUTTON_DOWN | BUTTON_UP | BUTTON_JUMP)
 
 /* extern uint8_t buttons;
 extern uint8_t button_ack;
@@ -50,6 +51,7 @@ struct Henry {
   blit::point partial;
   blit::point speed;
   HenryState state;
+  HenryState priorState;
   int dir;
   int falling;
   int sliding;
@@ -76,9 +78,9 @@ struct Duck {
 
 struct BigDuck {
   blit::point pos;
-  vec2 dPos;
+  blit::point dPos;
   int dir;
-  int frame;
+  bool frame;
 };
 
 class Game {
@@ -105,6 +107,10 @@ private:
   void renderBigBird(blit::surface &);
   void pollKeys();
   void moveHenry();
+  void moveBigDuck();
+  void moveDucks();
+  void moveLifts();
+
   bool startJump(Henry &);
   void jumpHenry(Henry &);
   void fallHenry(Henry &);
@@ -114,8 +120,10 @@ private:
   void animateHenry(Henry &);
 
   void addScore(int, int);
-  bool cannotMove(Henry &);
-  bool canGrabLadder(Henry &, int16_t);
+  void reduceBonus();
+  bool cannotMove(Henry&);
+  bool canGrabLadder(Henry&, int16_t);
+  bool henryHitLift(Henry&);
 
   blit::point tilePosition(blit::point &);
   blit::point tilePosition(int, int);
@@ -128,23 +136,28 @@ private:
 
   // input
   uint16_t buttonsDown;
-  uint16_t buttonAck; // ???
+  uint16_t buttonMask; // ???
   // int numPlayers
 
   // Level info
   bool hasLift;
-  int numGrain;
-  int numDucks;
-  int liftX;
-  int liftY[2];
-  int currentLift;
+  uint16_t numGrain;
+  uint16_t numDucks;
+  uint16_t liftX;
+  uint16_t liftY[2];
+  uint16_t currentLift;
   bool hasBigDuck;
 
   // state
-  uint16_t currentLevel;
+  uint8_t currentLevel;
   uint8_t currentPlayer;
   uint8_t eggsLeft;
+  uint8_t duckTimer;
+  uint8_t pauseDuckBonus;
   uint8_t tiles[ROWS * COLUMNS];
+  uint16_t timer;
+  uint16_t bonus;
+  bool isDead;
   Player playerData[MAX_PLAYERS];
   BigDuck bigDuck;
   Duck ducks[MAX_DUCKS];
