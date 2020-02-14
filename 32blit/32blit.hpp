@@ -1,9 +1,10 @@
 #pragma once
 
 #include "engine/engine.hpp"
-#include "engine/utility.hpp"
+#include "engine/file.hpp"
 #include "engine/output.hpp"
 #include "engine/input.hpp"
+#include "audio/audio.hpp"
 #include "engine/timer.hpp"
 #include "engine/tweening.hpp"
 #include "graphics/blend.hpp"
@@ -22,6 +23,8 @@
 
 #undef M_PI
 #define M_PI           3.14159265358979323846f  /* pi */
+
+constexpr float math_pi = 3.14159265358979323846f;
 
 
 #ifdef TARGET_32BLIT_HW
@@ -42,4 +45,3 @@ extern const uint8_t itcm_data;
 #define SRAM1 __SECTION__(".sram1")));
 #define SRAM2 __SECTION__(".sram2")));
 #define SRAM3 __SECTION__(".sram3")));
-

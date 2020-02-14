@@ -8,15 +8,15 @@ Game game;
 extern uint8_t *getSpriteData();
 
 void init() {
-  set_screen_mode(screen_mode::hires);
-  game.SetScreenSize(fb.bounds);
-  fb.sprites = spritesheet::load(getSpriteData(), nullptr);
+  set_screen_mode(ScreenMode::hires);
+  game.SetScreenSize(screen.bounds);
+  screen.sprites = SpriteSheet::load(getSpriteData(), nullptr);
 }
 
 void update(uint32_t time) { game.Tickle(time); }
 
 void render(uint32_t time) {
-  fb.pen(rgba{0, 0, 0});
-  fb.clear();
-  game.Render(fb);
+  screen.pen = Pen(0, 0, 0);
+  screen.clear();
+  game.Render(screen);
 }

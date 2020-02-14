@@ -1,7 +1,9 @@
 add_library(BlitHalSDL STATIC
+	File.cpp
 	Input.cpp
 	Main.cpp
 	Renderer.cpp
+	Audio.cpp
 	System.cpp
 )
 
@@ -13,7 +15,18 @@ if(EMSCRIPTEN)
 
 	set(SDL2_LIBRARIES "-s USE_SDL=2")
 else()
-	find_package(SDL2 REQUIRED)
+	# attempt to find the framework (find_package won't work as there's no config file)
+	if(APPLE)
+		find_library(SDL2_LIBRARIES NAMES SDL2)
+		
+		find_path(SDL2_INCLUDE_DIRS NAMES SDL.h
+			PATHS ~/Library/Frameworks /Library/Frameworks
+		)
+	endif()
+
+	if(NOT SDL2_LIBRARIES OR NOT SDL2_INCLUDE_DIRS)
+		find_package(SDL2 REQUIRED)
+	endif()
 
 	# If SDL2 was built using CMake, the generated configuration files define SDL2::* targets instead of the SDL2_* variables
 	if(TARGET SDL2::SDL2)
@@ -26,6 +39,12 @@ else()
 endif()
 
 target_link_libraries(BlitHalSDL PUBLIC BlitEngine ${SDL2_LIBRARIES})
+
+# copy SDL2.dll to build/install dir for windows users
+if(SDL2_DLL)
+	configure_file(${SDL2_DLL} ${32blit_BINARY_DIR}/SDL2.dll COPYONLY)
+	install(FILES ${SDL2_DLL} DESTINATION bin)
+endif()
 
 target_compile_definitions(BlitHalSDL
 	PRIVATE
@@ -61,10 +80,16 @@ if(DEFINED VIDEO_CAPTURE AND VIDEO_CAPTURE)
 	)
 endif()
 
-
 function(blit_executable NAME SOURCES)
 	add_executable(${NAME} ${SOURCES} ${ARGN})
-	if (${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+
+	install(TARGETS ${NAME}
+		RUNTIME DESTINATION bin
+	)
+
+	if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+		target_link_libraries(${NAME} BlitHalSDL)
+	elseif(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
   		target_link_libraries(${NAME} -Wl,-force_load BlitHalSDL)
 	else()
   		target_link_libraries(${NAME} -Wl,--whole-archive BlitHalSDL -Wl,--no-whole-archive)
@@ -73,4 +98,8 @@ function(blit_executable NAME SOURCES)
 	if(EMSCRIPTEN)
 		set_target_properties(${NAME} PROPERTIES SUFFIX ".html")
 	endif()
+endfunction()
+
+function(blit_executable_int_flash NAME SOURCES)
+	blit_executable(${NAME} ${SOURCES} ${ARGN})
 endfunction()

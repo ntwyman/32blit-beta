@@ -7,11 +7,11 @@
 using namespace blit;
 
 // Gives the top left ofa tile
-point Game::tilePosition(int x, int y) {
-    return point(x * TILE_STRIDE, this->screenSize.h - ((y + 1) * TILE_STRIDE));
+Point Game::tilePosition(int x, int y) {
+    return Point(x * TILE_STRIDE, this->screenSize.h - ((y + 1) * TILE_STRIDE));
 }
 
-point Game::tilePosition(point &tile) {
+Point Game::tilePosition(Point &tile) {
     return this->tilePosition(tile.x, tile.y);
 }
 
@@ -102,8 +102,8 @@ void Game::loadLevel(unsigned int levelNumber) {
     }
     this->currentLevel = levelNumber;
     this->duckTimer = 0;
-    this->bigDuck.pos = point(4, 36);
-    this->bigDuck.dPos = vec2(0, 0);
+    this->bigDuck.pos = Point(4, 36);
+    this->bigDuck.dPos = Point(0, 0);
     this->bigDuck.frame = false;
     this->bigDuck.dir = 0;
 
@@ -142,11 +142,11 @@ void Game::loadLevel(unsigned int levelNumber) {
     }
 }
 
-static void renderDigit(surface &s, unsigned int digit, unsigned int x, unsigned int y) {
-    s.sprite(SpriteDigits[digit], point(x, y));
+static void renderDigit(Surface &s, unsigned int digit, unsigned int x, unsigned int y) {
+    s.sprite(SpriteDigits[digit], Point(x, y));
 }
 
-static void renderNumber(surface &s, unsigned int number, unsigned int x, unsigned int y) {
+static void renderNumber(Surface &s, unsigned int number, unsigned int x, unsigned int y) {
     renderDigit(s, number % 10,x+10, y);
     number /= 10;
     renderDigit(s, number%10,x+5, y);
@@ -154,32 +154,32 @@ static void renderNumber(surface &s, unsigned int number, unsigned int x, unsign
         renderDigit(s, number/10,x, y);
     }
 }
-void Game::renderBackground(surface &s) {
+void Game::renderBackground(Surface &s) {
     // WARNING MAGIC NUMBERS ABOUND
     // Score
-    s.sprite(SpriteScore, point(0, 0));
-    s.sprite(SpriteBlank, point(27, 0));
+    s.sprite(SpriteScore, Point(0, 0));
+    s.sprite(SpriteBlank, Point(27, 0));
 
     // Player
-    s.sprite(SpritePlayer, point(0, 12));
+    s.sprite(SpritePlayer, Point(0, 12));
     renderDigit(s, this->currentPlayer + 1,27, 13);
 
     // Level
-    s.sprite(SpriteLevel, point(36, 12));
+    s.sprite(SpriteLevel, Point(36, 12));
     renderNumber(s, this->currentLevel + 1, 59, 13);
 
     // Bonus
-    s.sprite(SpriteBonus, point(78, 12));
-    s.sprite(SpriteDigits[0], point(117, 13));
+    s.sprite(SpriteBonus, Point(78, 12));
+    s.sprite(SpriteDigits[0], Point(117, 13));
 
     // Time
-    s.sprite(SpriteTime, point(126, 12));
+    s.sprite(SpriteTime, Point(126, 12));
     renderNumber(s, this->timer, 0x90, 13);
 
     // Level deets
     for (int x = 0; x < COLUMNS; x++) {
         for (int y = 0; y < ROWS; y++) {
-            const point &pos = this->tilePosition(x, y);
+            const Point &pos = this->tilePosition(x, y);
 
             uint8_t tile = getTile(x, y);
             if (tile & TILE_WALL) {
@@ -199,18 +199,18 @@ void Game::renderBackground(surface &s) {
 
     //  Cage
     const Sprite &cageSprite = this->hasBigDuck ? SpriteCageOpen : SpriteCage;
-    s.sprite(cageSprite, point(0, 20));
+    s.sprite(cageSprite, Point(0, 20));
 }
 
-void Game::renderDucks(surface &s) {
+void Game::renderDucks(Surface &s) {
 
     for (int i = 0; i < this->numDucks; i++) {
 
         Duck &duck = this->ducks[i];
 
-        point pos = duck.pos;
+        Point pos = duck.pos;
         int dir = duck.dir;
-        sprite_transform flip = (dir == DIR_L) ? HORIZONTAL : NONE;
+        SpriteTransform flip = (dir == DIR_L) ? HORIZONTAL : NONE;
         Sprite sprite = SpriteDuck;
 
         switch (duck.state) {
@@ -241,11 +241,11 @@ void Game::renderDucks(surface &s) {
     }
 }
 
-void Game::renderHenry(surface &s) {
+void Game::renderHenry(Surface &s) {
 
     Henry &h = this->henry;
-    sprite_transform flip = NONE;
-    rect *sequence;
+    SpriteTransform flip = NONE;
+    Rect *sequence;
     unsigned int spriteIndex;
 
     if ((h.dir & (DIR_UP | DIR_DOWN)) != 0) { // Not going left or right
@@ -271,16 +271,16 @@ void Game::renderHenry(surface &s) {
     s.sprite(sequence[spriteIndex], h.pos, flip);
 }
 
-void Game::renderLifts(surface &s) {
+void Game::renderLifts(Surface &s) {
     if (this->hasLift) {
-        s.sprite(SpriteLift, point(this->liftX, this->liftY[0]));
-        s.sprite(SpriteLift, point(this->liftX, this->liftY[1]));
+        s.sprite(SpriteLift, Point(this->liftX, this->liftY[0]));
+        s.sprite(SpriteLift, Point(this->liftX, this->liftY[1]));
     }
 }
 
-void Game::renderBigBird(surface &s) {
+void Game::renderBigBird(Surface &s) {
     BigDuck &bigBird = this->bigDuck;
-    sprite_transform flip = (bigBird.dir == DIR_L) ? HORIZONTAL : NONE;
+    SpriteTransform flip = (bigBird.dir == DIR_L) ? HORIZONTAL : NONE;
     s.sprite(bigBird.frame ? SpriteBigDuckFrame : SpriteBigDuck, bigBird.pos,
              flip);
 }
@@ -327,21 +327,21 @@ void Game::pollKeys() {
 */
 
     uint16_t down = 0;
-    if (pressed(button::DPAD_LEFT) || joystick.x < -0.1f) {
+    if (pressed(Button::DPAD_LEFT) || joystick.x < -0.1f) {
         down |= BUTTON_LEFT;
     }
-    if (pressed(button::DPAD_RIGHT) || joystick.x > 0.1f) {
+    if (pressed(Button::DPAD_RIGHT) || joystick.x > 0.1f) {
         down &= ~BUTTON_LEFT;
         down |= BUTTON_RIGHT;
     }
-    if (pressed(button::DPAD_UP) || joystick.y < -0.1f) {
+    if (pressed(Button::DPAD_UP) || joystick.y < -0.1f) {
         down |= BUTTON_UP;
     }
-    if (pressed(button::DPAD_DOWN) || joystick.y > 0.1f) {
+    if (pressed(Button::DPAD_DOWN) || joystick.y > 0.1f) {
         down &= ~BUTTON_UP;
         down |= BUTTON_DOWN;
     }
-    if (pressed(button::A | button::JOYSTICK)) {
+    if (pressed(Button::A | Button::JOYSTICK)) {
         down |= BUTTON_JUMP;
     }
     // h.priorState = h.state;
@@ -558,7 +558,7 @@ void Game::climbHenry(Henry &h) {
     if (h.state != HenryState::WALK) {
         h.speed.x = 0;
         if (h.speed.y != 0 && h.partial.y == 0) {
-            point checkTile = h.tile;
+            Point checkTile = h.tile;
             if (h.speed.y >= 0) {
                 checkTile.y += 2;
             } else {
@@ -930,7 +930,7 @@ void Game::reduceBonus() {
         this->bonus--;
     }
 }
-void Game::SetScreenSize(blit::size &size) {
+void Game::SetScreenSize(blit::Size &size) {
     this->screenSize = size;
     this->loadLevel(0);
 }
@@ -956,7 +956,7 @@ The Update tick - runs roughly every 10 ms
     this->moveHenry();
     this->moveLifts();
     this->moveDucks();
-    if (pressed(button::X)) {
+    if (pressed(Button::X)) {
         if (!is_pressed) {
             this->loadLevel(this->currentLevel +1);
             is_pressed = true;
@@ -993,7 +993,7 @@ The Update tick - runs roughly every 10 ms
 //
     }
 
-void Game::Render(surface &s) {
+void Game::Render(Surface &s) {
     /*
      Render callback is roughly every 25 ms
     */

@@ -1,38 +1,40 @@
 #include "32blit.hpp"
 
-const blit::rgba desert[] = {
-    blit::rgba(0, 0, 0, 0),
-    blit::rgba(98, 26, 142),
-    blit::rgba(174, 57, 172),
-    blit::rgba(238, 141, 255),
-    blit::rgba(245, 6, 189),
-    blit::rgba(171, 21, 91),
-    blit::rgba(235, 42, 103),
-    blit::rgba(255, 225, 244),
-    blit::rgba(244, 239, 152),
-    blit::rgba(247, 136, 86),
-    blit::rgba(179, 73, 91),
-    blit::rgba(56, 18, 50),
-    blit::rgba(229, 42, 50),
-    blit::rgba(19, 46, 62),
-    blit::rgba(116, 241, 235),
-    blit::rgba(32, 67, 74),
-    blit::rgba(181, 82, 68),
-    blit::rgba(159, 103, 74),
-    blit::rgba(125, 87, 61),
-    blit::rgba(149, 106, 64),
-    blit::rgba(187, 141, 81),
-    blit::rgba(227, 171, 98),
-    blit::rgba(227, 212, 98),
-    blit::rgba(186, 187, 90),
-    blit::rgba(110, 112, 63),
-    blit::rgba(190, 193, 129),
-    blit::rgba(211, 215, 178),
-    blit::rgba(239, 220, 194),
-    blit::rgba(238, 191, 129),
-    blit::rgba(105, 75, 35),
-    blit::rgba(126, 90, 43),
-    blit::rgba(147, 106, 52)
+using namespace blit;
+
+const Pen desert[] = {
+    Pen(0, 0, 0, 0),
+    Pen(98, 26, 142),
+    Pen(174, 57, 172),
+    Pen(238, 141, 255),
+    Pen(245, 6, 189),
+    Pen(171, 21, 91),
+    Pen(235, 42, 103),
+    Pen(255, 225, 244),
+    Pen(244, 239, 152),
+    Pen(247, 136, 86),
+    Pen(179, 73, 91),
+    Pen(56, 18, 50),
+    Pen(229, 42, 50),
+    Pen(19, 46, 62),
+    Pen(116, 241, 235),
+    Pen(32, 67, 74),
+    Pen(181, 82, 68),
+    Pen(159, 103, 74),
+    Pen(125, 87, 61),
+    Pen(149, 106, 64),
+    Pen(187, 141, 81),
+    Pen(227, 171, 98),
+    Pen(227, 212, 98),
+    Pen(186, 187, 90),
+    Pen(110, 112, 63),
+    Pen(190, 193, 129),
+    Pen(211, 215, 178),
+    Pen(239, 220, 194),
+    Pen(238, 191, 129),
+    Pen(105, 75, 35),
+    Pen(126, 90, 43),
+    Pen(147, 106, 52)
 };
 
 const uint8_t sprites_background[] = {
@@ -44,10 +46,10 @@ const uint8_t sprites_background[] = {
     0x04, 0x00, // cols (4)
     0x04, 0x00, // rows (4)
 
-    0x03, // format
+    0x02, // format
 
     0x20, // number of palette colours
-//  r     g     b     a
+    //  r     g     b     a
     0x00, 0x00, 0x00, 0x00,
     0x62, 0x1a, 0x8e, 0xff,
     0xae, 0x39, 0xac, 0xff,
@@ -733,10 +735,10 @@ const uint8_t sprites_ships[] = {
     0x04, 0x00, // cols (4)
     0x04, 0x00, // rows (4)
 
-    0x03, // format
+    0x02, // format
 
     0x20, // number of palette colours
-//  r     g     b     a
+    //  r     g     b     a
     0x76, 0x83, 0xcc, 0xff,
     0xd4, 0x6e, 0x33, 0xff,
     0x38, 0x12, 0x32, 0xff,
@@ -768,7 +770,7 @@ const uint8_t sprites_ships[] = {
     0x99, 0x20, 0x25, 0xff,
     0xff, 0xff, 0xff, 0xff,
     0xff, 0xdc, 0xe7, 0xff,
-    0x00, 0x00, 0x00, 0xff,
+    0x00, 0x00, 0x00, 0x00,
 
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,

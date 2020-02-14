@@ -1,7 +1,7 @@
 #include "types/rect.hpp"
 
-using blit::rect;
-typedef rect Sprite;
+using blit::Rect;
+typedef Rect Sprite;
 extern const Sprite &SpriteEgg;
 extern const Sprite &SpriteWall;
 extern const Sprite &SpriteLadder;

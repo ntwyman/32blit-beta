@@ -46,10 +46,10 @@ extern int skip_frame;
 enum HenryState { WALK, CLIMB, JUMP, FALL, LIFT };
 
 struct Henry {
-  blit::point pos;
-  blit::point tile;
-  blit::point partial;
-  blit::point speed;
+  blit::Point pos;
+  blit::Point tile;
+  blit::Point partial;
+  blit::Point speed;
   HenryState state;
   HenryState priorState;
   int dir;
@@ -70,23 +70,23 @@ struct Player {
 enum DuckState { BORED, STEP, EAT1, EAT2, EAT3, EAT4 };
 
 struct Duck {
-  blit::point pos;
-  blit::point tile;
+  blit::Point pos;
+  blit::Point tile;
   DuckState state;
   int dir;
 };
 
 struct BigDuck {
-  blit::point pos;
-  blit::point dPos;
+  blit::Point pos;
+  blit::Point dPos;
   int dir;
   bool frame;
 };
 
 class Game {
 public:
-  void SetScreenSize(blit::size &);
-  void Render(blit::surface &);
+  void SetScreenSize(blit::Size &);
+  void Render(blit::Surface &);
   void Tickle(uint32_t);
 
 private:
@@ -100,11 +100,11 @@ private:
   }
 
   void loadLevel(unsigned int);
-  void renderBackground(blit::surface &);
-  void renderDucks(blit::surface &);
-  void renderHenry(blit::surface &);
-  void renderLifts(blit::surface &);
-  void renderBigBird(blit::surface &);
+  void renderBackground(blit::Surface &);
+  void renderDucks(blit::Surface &);
+  void renderHenry(blit::Surface &);
+  void renderLifts(blit::Surface &);
+  void renderBigBird(blit::Surface &);
   void pollKeys();
   void moveHenry();
   void moveBigDuck();
@@ -125,11 +125,11 @@ private:
   bool canGrabLadder(Henry&, int16_t);
   bool henryHitLift(Henry&);
 
-  blit::point tilePosition(blit::point &);
-  blit::point tilePosition(int, int);
+  blit::Point tilePosition(blit::Point &);
+  blit::Point tilePosition(int, int);
 
   // Screen
-  blit::size screenSize;
+  blit::Size screenSize;
 
   // Uodate timing
   uint32_t lastTime;
