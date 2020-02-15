@@ -10,7 +10,7 @@ extern uint8_t *getSpriteData();
 void init() {
   set_screen_mode(ScreenMode::hires);
   game.SetScreenSize(screen.bounds);
-  screen.sprites = SpriteSheet::load(getSpriteData(), nullptr);
+  screen.sprites = SpriteSheet::load(getSpriteData());
 }
 
 void update(uint32_t time) { game.Tickle(time); }
