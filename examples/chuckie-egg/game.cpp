@@ -102,6 +102,8 @@ void Game::loadLevel(unsigned int levelNumber) {
     }
     this->currentLevel = levelNumber;
     this->duckTimer = 0;
+    this->duckRate = levelNumber < 32 ? 8 : 5;
+    this->currentDuck = 0;
     this->bigDuck.pos = Point(4, 36);
     this->bigDuck.dPos = Point(0, 0);
     this->bigDuck.frame = false;
@@ -140,6 +142,10 @@ void Game::loadLevel(unsigned int levelNumber) {
     if (this->hasLift) {
         debugf("X: %d, Y0: %d, Y1: %d\r\n", this->liftX, this->liftY[0], this->liftY[1]);
     }
+
+    this->randHigh = 0x767676;
+    this->randLow = 0x76;
+
 }
 
 static void renderDigit(Surface &s, unsigned int digit, unsigned int x, unsigned int y) {
@@ -674,6 +680,18 @@ void Game::moveBigDuck() {
     bd.frame = !bd.frame;
 }
 
+static int popcount(unsigned int val) {
+    return __builtin_popcount(val);
+}
+
+unsigned int Game::frobRandom(void)
+{
+    int carry = (((this->randLow & 0x48) + 0x38) & 0x40) != 0;
+    this->randHigh = (this->randHigh << 1) | carry;
+    this->randLow = (this->randLow << 1) | ((this->randHigh >> 24) & 1);
+    return this->randLow;
+}
+
 void Game::moveDucks() {
 //    int tmp;
 //    int y;
@@ -684,133 +702,130 @@ void Game::moveDucks() {
 //    duckinfo_t *this_duck;
 
     this->duckTimer++;
-    if (this->duckTimer == 8) {
-        this->moveBigDuck();
-    } else if (this->duckTimer == 4) {
-        if (this->pauseDuckBonus !=0 ) {
+    if (this->duckTimer == 4) {
+        if (this->pauseDuckBonus != 0) {
             this->pauseDuckBonus--;
             return;
         }
         this->timer--;
-        if (this->timer ==0 ) {
+        if (this->timer == 0) {
             this->isDead = true;
-        } else if ((this -> timer % 5) == 0) {
+        } else if ((this->timer % 5) == 0) {
             this->reduceBonus();
         }
         return;
     }
-//    if (current_duck == 0)
-//        current_duck = duck_speed;
-//    else
-//        current_duck--;
-//    if (current_duck >= num_ducks)
-//        return;
-//    if (raster)
-//        raster->draw_duck(current_duck);
-//    /* Move little duck.  */
-//    this_duck = &duck[current_duck];
-//    if (this_duck->mode >= DUCK_EAT1) {
-//        /* Eat grain.  */
-//        if (this_duck->mode == DUCK_EAT2) {
-//            x = duck[current_duck].tile_x - 1;
-//            y = duck[current_duck].tile_y;
-//            if ((duck[current_duck].dir & DIR_L) == 0)
-//                x += 2;
-//            tmp = Do_ReadMap(x, y);
-//            if ((tmp & 8) != 0) {
-//                player_data->grain[tmp >> 4]--;
-//                RemoveGrain(x, y);
-//            }
-//        }
-//    } else if (this_duck->mode == DUCK_BORED) {
-//        /* Figure out which way to go next.  */
-//        x = duck[current_duck].tile_x;
-//        y = duck[current_duck].tile_y;
-//        newdir = 0;
-//        tmp = Do_ReadMap(x - 1, y - 1);
-//        if ((tmp & 1) != 0)
-//            newdir = DIR_L;
-//        tmp = Do_ReadMap(x + 1, y - 1);
-//        if ((tmp & 1) != 0)
-//            newdir |= DIR_R;
-//        tmp = Do_ReadMap(x, y - 1);
-//        if ((tmp & 2) != 0)
-//            newdir |= DIR_DOWN;
-//        tmp = Do_ReadMap(x, y + 2);
-//        if ((tmp & 2) != 0)
-//            newdir |= DIR_UP;
-//        if (popcount(newdir) != 1) {
-//            tmp = this_duck->dir;
-//            if (tmp & DIR_HORIZ) {
-//                tmp ^= 0xfc;
-//            } else {
-//                tmp ^= 0xf3;
-//            }
-//            newdir &= tmp;
-//        }
-//        if (popcount(newdir) != 1) {
-//            tmp2 = newdir;
-//            do {
-//                FrobRandom();
-//                newdir = rand_low & tmp2;
-//            } while (popcount(newdir) != 1);
-//        }
-//        duck[current_duck].dir = newdir;
-//        /* Check for grain to eat.  */
-//        tmp = this_duck->dir;
-//        if (tmp & DIR_HORIZ) {
-//            if (tmp == DIR_L)
-//                tmp = Do_ReadMap(x - 1, y);
-//            else
-//                tmp = Do_ReadMap(x + 1, y);
-//            tmp &= 8;
-//            if (tmp != 0) {
-//                this_duck->mode = DUCK_EAT1;
-//            }
-//        }
-//    }
-//    if (this_duck->mode >= DUCK_EAT1) {
-//        /* Eating.  */
-//        if (this_duck->mode == DUCK_EAT4)
-//            this_duck->mode = DUCK_BORED;
-//        else
-//            this_duck->mode++;
-//        if (raster)
-//            raster->draw_duck(current_duck);
-//        return;
-//    }
-//    /* Walking.  */
-//    if (this_duck->mode == DUCK_STEP) {
-//        this_duck->mode = DUCK_BORED;
-//        flag = 1;
-//    } else {
-//        this_duck->mode = DUCK_STEP;
-//        flag = 0;
-//    }
-//    switch (this_duck->dir) {
-//        case DIR_L:
-//            duck[current_duck].x -= 4;
-//            duck[current_duck].tile_x -= flag;
-//            break;
-//        case DIR_R:
-//            duck[current_duck].x += 4;
-//            duck[current_duck].tile_x += flag;
-//            break;
-//        case DIR_UP:
-//            duck[current_duck].y += 4;
-//            duck[current_duck].tile_y += flag;
-//            break;
-//        case DIR_DOWN:
-//            duck[current_duck].y -= 4;
-//            duck[current_duck].tile_y -= flag;;
-//            break;
-//        default:
-//            abort();
-//    }
-//    if (raster)
-//        raster->draw_duck(current_duck);
-//    return;
-//    }
+
+    if (this->duckTimer == 8) {
+        this->moveBigDuck();
+    }
+
+    if (this->currentDuck == 0)
+        this->currentDuck = this->duckRate;
+    else
+        this->currentDuck--;
+    if (this->currentDuck >= this->numDucks) {
+        return;
+    }
+
+    auto &thisDuck = this->ducks[this->currentDuck];
+    if (thisDuck.state >= DuckState::EAT1) { // nom nom nom
+        if (thisDuck.state == DuckState::EAT2) {
+            int x = thisDuck.tile.x - 1;
+            int y = thisDuck.tile.y;
+            if (thisDuck.dir == DIR_R) {
+                x += 2;
+            }
+            unsigned int tile = this->getTile(x, y);
+            if ((tile & TILE_GRAIN) != 0) {
+                this->playerData[this->currentPlayer].grain[tile >> 4]--;
+                setTile(x, y, tile & ~TILE_GRAIN);
+            }
+        }
+    } else if (thisDuck.state == DuckState::BORED) {
+        /* Figure out which way to go next.  */
+        int x = thisDuck.tile.x;
+        int y = thisDuck.tile.y;
+        unsigned int newDir = 0;
+        if ((this->getTile(x - 1, y - 1) & TILE_WALL) != 0)
+            newDir = DIR_L;
+        if ((this->getTile(x + 1, y - 1) & TILE_WALL) != 0)
+            newDir |= DIR_R;
+        if ((this->getTile(x, y - 1) & TILE_LADDER) != 0)
+            newDir |= DIR_DOWN;
+        if ((this->getTile(x, y + 2) & TILE_LADDER) != 0)
+            newDir |= DIR_UP;
+        if (popcount(newDir) != 1) { // Choices
+            unsigned int options = thisDuck.dir;
+            if ((options & DIR_HORIZ) != 0) { // was going along
+                options ^= 0xfc;
+            } else {
+                options ^= 0xf3;
+            }
+            newDir &= options;
+            options = newDir;
+            while (popcount(newDir) != 1) { // Still choices
+                newDir = this->frobRandom() & options;
+            }
+        }
+        thisDuck.dir = newDir;
+        if (newDir & DIR_HORIZ) {
+            if (newDir == DIR_L)
+                x -= 1;
+            else
+                x += 1;
+            if ((this->getTile(x, y) & TILE_GRAIN) != 0) {
+                thisDuck.state = DuckState::EAT1;
+            }
+        }
+    }
+
+    int walkTile = -1;
+    switch (thisDuck.state) {
+        case DuckState::STEP:
+            thisDuck.state = DuckState::BORED;
+            walkTile = 1;
+            break;
+        case DuckState::BORED:
+            thisDuck.state = DuckState::STEP;
+            walkTile = 0;
+            break;
+        case DuckState::EAT1:
+            thisDuck.state = DuckState::EAT2;
+            break;
+        case DuckState::EAT2:
+            thisDuck.state = DuckState::EAT3;
+            break;
+        case DuckState::EAT3:
+            thisDuck.state = DuckState::EAT4;
+            break;
+        case DuckState::EAT4:
+            thisDuck.state = DuckState::BORED;
+            break;
+    }
+    if (walkTile < 0) {
+        return;
+    }
+    switch (thisDuck.dir) {
+        case DIR_L:
+            thisDuck.pos.x -= 4;
+            thisDuck.tile.x -= walkTile;
+            break;
+        case DIR_R:
+            thisDuck.pos.x += 4;
+            thisDuck.tile.x += walkTile;
+            break;
+        case DIR_UP:
+            thisDuck.pos.y -= 4;
+            thisDuck.tile.y += walkTile;
+            break;
+        case DIR_DOWN:
+            thisDuck.pos.y += 4;
+            thisDuck.tile.y -= walkTile;
+            break;
+        default:
+            abort();
+    }
 }
 
 void Game::animateHenry(Henry &h) {

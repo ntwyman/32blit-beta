@@ -52,7 +52,7 @@ struct Henry {
   blit::Point speed;
   HenryState state;
   HenryState priorState;
-  int dir;
+  unsigned int dir;
   int falling;
   int sliding;
 };
@@ -73,13 +73,13 @@ struct Duck {
   blit::Point pos;
   blit::Point tile;
   DuckState state;
-  int dir;
+  unsigned int dir;
 };
 
 struct BigDuck {
   blit::Point pos;
   blit::Point dPos;
-  int dir;
+  unsigned int dir;
   bool frame;
 };
 
@@ -124,6 +124,7 @@ private:
   bool cannotMove(Henry&);
   bool canGrabLadder(Henry&, int16_t);
   bool henryHitLift(Henry&);
+  unsigned int frobRandom();
 
   blit::Point tilePosition(blit::Point &);
   blit::Point tilePosition(int, int);
@@ -149,15 +150,20 @@ private:
   bool hasBigDuck;
 
   // state
+  bool isDead;
   uint8_t currentLevel;
   uint8_t currentPlayer;
   uint8_t eggsLeft;
   uint8_t duckTimer;
+  uint8_t duckRate;
   uint8_t pauseDuckBonus;
+  uint8_t randLow;
+  uint8_t currentDuck;
   uint8_t tiles[ROWS * COLUMNS];
   uint16_t timer;
   uint16_t bonus;
-  bool isDead;
+  uint32_t randHigh;
+
   Player playerData[MAX_PLAYERS];
   BigDuck bigDuck;
   Duck ducks[MAX_DUCKS];
