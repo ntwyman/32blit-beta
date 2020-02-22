@@ -145,7 +145,6 @@ void Game::loadLevel(unsigned int levelNumber) {
 
     this->randHigh = 0x767676;
     this->randLow = 0x76;
-
 }
 
 static void renderDigit(Surface &s, unsigned int digit, unsigned int x, unsigned int y) {
@@ -684,8 +683,7 @@ static int popcount(unsigned int val) {
     return __builtin_popcount(val);
 }
 
-unsigned int Game::frobRandom(void)
-{
+unsigned int Game::frobRandom(){
     int carry = (((this->randLow & 0x48) + 0x38) & 0x40) != 0;
     this->randHigh = (this->randHigh << 1) | carry;
     this->randLow = (this->randLow << 1) | ((this->randHigh >> 24) & 1);
@@ -693,13 +691,6 @@ unsigned int Game::frobRandom(void)
 }
 
 void Game::moveDucks() {
-//    int tmp;
-//    int y;
-//    int x;
-//    int flag;
-//    int tmp2;
-//    int newdir;
-//    duckinfo_t *this_duck;
 
     this->duckTimer++;
     if (this->duckTimer == 4) {
@@ -936,6 +927,24 @@ bool Game::cannotMove(Henry &h) {
     return this->isTileWall(x, y);
 }
 
+void Game::detectCollisions() {
+    /* Little ducks */
+    for (int n = 0; n < this->numDucks; n++) {
+        if ((unsigned)((this->ducks[n].pos.x - this->henry.pos.x) + 5) < 0x0b
+            && (unsigned)((this->ducks[n].pos.y - 1) - this->henry.pos.y + 0xe) < 0x1d)
+            this->isDead = true;
+    }
+    /* Big duck */
+    if (!this->hasBigDuck)
+        return;
+    if ((unsigned)(this->bigDuck.pos.x - this->henry.pos.x + 9) >= 0x0b)
+        return;
+    if ((unsigned)(this->bigDuck.pos.y - this->henry.pos.y + 9) >= 0x1d)
+        return;
+    this->isDead = true;
+
+}
+
 void Game::addScore(int n, int x) {
     // FOR NOW
 }
@@ -971,6 +980,8 @@ The Update tick - runs roughly every 10 ms
     this->moveHenry();
     this->moveLifts();
     this->moveDucks();
+    this->detectCollisions();
+
     if (pressed(Button::X)) {
         if (!is_pressed) {
             this->loadLevel(this->currentLevel +1);
@@ -985,6 +996,9 @@ The Update tick - runs roughly every 10 ms
     }
     if (this->eggsLeft == 0) {
         loadLevel(this->currentLevel + 1);
+    }
+    if (this->isDead) {
+        loadLevel(this->currentLevel);
     }
 //        /* Level complete */
 //        while (!zero_bonus) {

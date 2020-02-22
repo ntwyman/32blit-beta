@@ -110,6 +110,7 @@ private:
   void moveBigDuck();
   void moveDucks();
   void moveLifts();
+  void detectCollisions();
 
   bool startJump(Henry &);
   void jumpHenry(Henry &);
@@ -125,6 +126,7 @@ private:
   bool canGrabLadder(Henry&, int16_t);
   bool henryHitLift(Henry&);
   unsigned int frobRandom();
+
 
   blit::Point tilePosition(blit::Point &);
   blit::Point tilePosition(int, int);
