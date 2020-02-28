@@ -145,6 +145,11 @@ void Game::loadLevel(unsigned int levelNumber) {
 
     this->randHigh = 0x767676;
     this->randLow = 0x76;
+    int b = currentLevel +1;
+    if (b >= 10)
+        b = 9;
+    this->bonus = b * 1000;
+    this->score = 0;
 }
 
 static void renderDigit(Surface &s, unsigned int digit, unsigned int x, unsigned int y) {
@@ -152,18 +157,25 @@ static void renderDigit(Surface &s, unsigned int digit, unsigned int x, unsigned
 }
 
 static void renderNumber(Surface &s, unsigned int number, unsigned int x, unsigned int y) {
-    renderDigit(s, number % 10,x+10, y);
+    renderDigit(s, number % 10,x, y);
     number /= 10;
-    renderDigit(s, number%10,x+5, y);
-    if (number > 10) {
-        renderDigit(s, number/10,x, y);
+    renderDigit(s, number%10,x-5, y);
+    x -= 10;
+    for(;;) {
+        number /= 10;
+        if (number == 0)
+            break;
+        renderDigit(s, number % 10, x, y);
+        x -= 5;
     }
 }
+
 void Game::renderBackground(Surface &s) {
     // WARNING MAGIC NUMBERS ABOUND
     // Score
     s.sprite(SpriteScore, Point(0, 0));
     s.sprite(SpriteBlank, Point(27, 0));
+    renderNumber(s, this->score, 53,1);
 
     // Player
     s.sprite(SpritePlayer, Point(0, 12));
@@ -171,15 +183,16 @@ void Game::renderBackground(Surface &s) {
 
     // Level
     s.sprite(SpriteLevel, Point(36, 12));
-    renderNumber(s, this->currentLevel + 1, 59, 13);
+    renderNumber(s, this->currentLevel + 1, 69, 13);
 
     // Bonus
     s.sprite(SpriteBonus, Point(78, 12));
-    s.sprite(SpriteDigits[0], Point(117, 13));
+    renderNumber(s, this->bonus, 117, 13);
+    //s.sprite(SpriteDigits[0], Point(117, 13));
 
     // Time
     s.sprite(SpriteTime, Point(126, 12));
-    renderNumber(s, this->timer, 0x90, 13);
+    renderNumber(s, this->timer, 153, 13);
 
     // Level deets
     for (int x = 0; x < COLUMNS; x++) {
@@ -317,19 +330,6 @@ void Game::pollKeys() {
         debugf("State change: %s\r\n", stateToString(h.state));
         h.priorState = h.state;
     }
-    /*
-    if (h.state != h.priorState) {
-        if (h.state == HenryState::WALK) {
-            this->buttonMask |= (BUTTON_UP | BUTTON_DOWN);
-        } else if (h.state == HenryState::CLIMB) {
-            this->buttonMask |= (BUTTON_LEFT | BUTTON_RIGHT);
-        } else if (h.state == HenryState::LIFT) {
-            this->buttonMask |= (BUTTON_UP | BUTTON_DOWN | BUTTON_LEFT | BUTTON_RIGHT);
-        }
-    }
-    uint16_t down = (this->buttonsDown & ~this->buttonMask);
-    this->buttonMask = 0;
-*/
 
     uint16_t down = 0;
     if (pressed(Button::DPAD_LEFT) || joystick.x < -0.1f) {
@@ -349,7 +349,6 @@ void Game::pollKeys() {
     if (pressed(Button::A | Button::JOYSTICK)) {
         down |= BUTTON_JUMP;
     }
-    // h.priorState = h.state;
     this->buttonsDown = down;
 }
 
@@ -859,13 +858,13 @@ void Game::animateHenry(Henry &h) {
         if (score >= 10) {
             score = 10;
         }
-        this->addScore(5, score);
+        this->addScore( score * 100);
     } else {
         //        squidge(5);
         uint8_t grainIndex = tile >> 4;
         player.grain[grainIndex]--;
         this->setTile(x, y, 0);
-        this->addScore(6, 5);
+        this->addScore(50);
         this->pauseDuckBonus = 14;
     }
 }
@@ -945,13 +944,14 @@ void Game::detectCollisions() {
 
 }
 
-void Game::addScore(int n, int x) {
-    // FOR NOW
+void Game::addScore(int n) {
+    auto oldScore = this->score;
+    this->score += n;
 }
 
 void Game::reduceBonus() {
     if (this->bonus > 0) {
-        this->bonus--;
+        this->bonus-=10;
     }
 }
 void Game::SetScreenSize(blit::Size &size) {
@@ -994,13 +994,15 @@ The Update tick - runs roughly every 10 ms
     if (this->henry.pos.y > 229) {
         this->loadLevel(this->currentLevel);
     }
-    if (this->eggsLeft == 0) {
-        loadLevel(this->currentLevel + 1);
-    }
     if (this->isDead) {
         loadLevel(this->currentLevel);
+    } else if (this->eggsLeft == 0) {
+        while (this->bonus > 0) {
+            this->reduceBonus();
+            this->addScore(10);
+        }
     }
-//        /* Level complete */
+        //        /* Level complete */
 //        while (!zero_bonus) {
 //            AddScore(6, 1);
 //            ReduceBonus();

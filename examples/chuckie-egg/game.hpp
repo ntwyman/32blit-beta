@@ -120,7 +120,7 @@ private:
   void liftHenry(Henry &);
   void animateHenry(Henry &);
 
-  void addScore(int, int);
+  void addScore(int);
   void reduceBonus();
   bool cannotMove(Henry&);
   bool canGrabLadder(Henry&, int16_t);
@@ -164,6 +164,7 @@ private:
   uint8_t tiles[ROWS * COLUMNS];
   uint16_t timer;
   uint16_t bonus;
+  uint32_t score;
   uint32_t randHigh;
 
   Player playerData[MAX_PLAYERS];
