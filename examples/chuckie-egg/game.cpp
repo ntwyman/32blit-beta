@@ -8,7 +8,7 @@ using namespace blit;
 
 // Gives the top left ofa tile
 Point Game::tilePosition(int x, int y) {
-    return Point(x * TILE_STRIDE, this->screenSize.h - ((y + 1) * TILE_STRIDE));
+    return Point(X_OFFSET + x * TILE_STRIDE, this->screenSize.h - ((y + 1) * TILE_STRIDE));
 }
 
 Point Game::tilePosition(Point &tile) {
@@ -104,7 +104,7 @@ void Game::loadLevel(unsigned int levelNumber) {
     this->duckTimer = 0;
     this->duckRate = levelNumber < 32 ? 8 : 5;
     this->currentDuck = 0;
-    this->bigDuck.pos = Point(4, 36);
+    this->bigDuck.pos = Point(X_OFFSET + 4, 36);
     this->bigDuck.dPos = Point(0, 0);
     this->bigDuck.frame = false;
     this->bigDuck.dir = 0;
@@ -153,7 +153,7 @@ void Game::loadLevel(unsigned int levelNumber) {
 }
 
 static void renderDigit(Surface &s, unsigned int digit, unsigned int x, unsigned int y) {
-    s.sprite(SpriteDigits[digit], Point(x, y));
+    s.sprite(SpriteDigits[digit], Point(x + X_OFFSET, y));
 }
 
 static void renderNumber(Surface &s, unsigned int number, unsigned int x, unsigned int y) {
@@ -173,25 +173,25 @@ static void renderNumber(Surface &s, unsigned int number, unsigned int x, unsign
 void Game::renderBackground(Surface &s) {
     // WARNING MAGIC NUMBERS ABOUND
     // Score
-    s.sprite(SpriteScore, Point(0, 0));
-    s.sprite(SpriteBlank, Point(27, 0));
+    s.sprite(SpriteScore, Point(X_OFFSET, 0));
+    s.sprite(SpriteBlank, Point(X_OFFSET + 27 , 0));
     renderNumber(s, this->score, 53,1);
 
     // Player
-    s.sprite(SpritePlayer, Point(0, 12));
+    s.sprite(SpritePlayer, Point(X_OFFSET, 12));
     renderDigit(s, this->currentPlayer + 1,27, 13);
 
     // Level
-    s.sprite(SpriteLevel, Point(36, 12));
+    s.sprite(SpriteLevel, Point(X_OFFSET + 36, 12));
     renderNumber(s, this->currentLevel + 1, 69, 13);
 
     // Bonus
-    s.sprite(SpriteBonus, Point(78, 12));
+    s.sprite(SpriteBonus, Point(X_OFFSET + 78, 12));
     renderNumber(s, this->bonus, 117, 13);
     //s.sprite(SpriteDigits[0], Point(117, 13));
 
     // Time
-    s.sprite(SpriteTime, Point(126, 12));
+    s.sprite(SpriteTime, Point(X_OFFSET + 126, 12));
     renderNumber(s, this->timer, 153, 13);
 
     // Level deets
@@ -217,7 +217,7 @@ void Game::renderBackground(Surface &s) {
 
     //  Cage
     const Sprite &cageSprite = this->hasBigDuck ? SpriteCageOpen : SpriteCage;
-    s.sprite(cageSprite, Point(0, 20));
+    s.sprite(cageSprite, Point(X_OFFSET, 20));
 }
 
 void Game::renderDucks(Surface &s) {
@@ -670,7 +670,7 @@ void Game::moveBigDuck() {
         bd.dPos.y = -bd.dPos.y;
     }
     int16_t newX = bd.pos.x + bd.dPos.x;
-    if (newX < 0 || newX >= 144) {
+    if (newX < X_OFFSET || newX >= (X_OFFSET + 144)) {
         bd.dPos.x = - bd.dPos.x;
     }
     bd.pos.x += bd.dPos.x;
@@ -874,7 +874,7 @@ bool Game::cannotMove(Henry &h) {
         return false;
     }
     if (h.speed.x < 0) {
-        if (h.pos.x == 0) {
+        if (h.pos.x <= X_OFFSET+ 2) {
             return true;
         }
         if (h.partial.x >= 2 || h.speed.y == 2) {
@@ -898,7 +898,7 @@ bool Game::cannotMove(Henry &h) {
         y++;
         return this->isTileWall(x, y);
     }
-    if (h.pos.x >= 152) {
+    if (h.pos.x >= X_OFFSET + 152) {
         return true;
     }
     if (h.partial.x < 5) {

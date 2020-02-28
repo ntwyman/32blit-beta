@@ -8,6 +8,7 @@
 #define ROWS 25
 #define COLUMNS 20
 #define TILE_STRIDE 8
+#define X_OFFSET 80
 
 #define TILE_WALL 0x01u
 #define TILE_LADDER 0x02u
