@@ -68,7 +68,7 @@ void Game::loadLevel(unsigned int levelNumber) {
     }
 
     if (this->hasLift) {
-        this->liftX = *(p++) << 3u;
+        this->liftX = X_OFFSET + (*(p++) << 3u);
         this->liftY[0] = 232;
         this->liftY[1] = 142;
     }
