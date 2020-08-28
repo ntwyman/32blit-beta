@@ -1,4 +1,5 @@
 list(APPEND SOURCES
+	startup_stm32h750xx.s
 	Src/main.c
 	Src/stm32h7xx_it.c
 	Src/stm32h7xx_hal_msp.c
@@ -46,6 +47,10 @@ list(APPEND SOURCES
 	Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c
 	Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c
 	Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c
+	Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c
+  Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc_bot.c
+  Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc_data.c 
+  Src/usbd_msc_scsi.c
 	Src/system_stm32h7xx.c
 	Src/user_diskio.c
 	Src/fatfs.c
@@ -55,6 +60,7 @@ list(APPEND SOURCES
 	Src/usbd_conf.c
 	Src/usbd_desc.c
 	Src/usbd_cdc_if.c
+	Src/usbd_storage_if.c	
 	Src/display.cpp
 	Src/gpio.cpp
 	Src/jpeg.c
@@ -76,16 +82,29 @@ list(APPEND SOURCES
 	Src/rng.c
 	Src/32blit.c
 	Src/CDCLogging.c
-	startup_stm32h750xx.s
 	Src/CDCDataStream.cpp 
 	Src/CDCCommandStream.cpp 
 	Src/CDCCommandHandler.cpp 
 	Src/CDCResetHandler.cpp
 	Src/CDCInfoHandler.cpp 
+	Src/USBManager.cpp
 	Utilities/JPEG/jpeg_utils.c
 )
 
-set_source_files_properties( ${SOURCES} PROPERTIES LANGUAGE CXX )
+set_source_files_properties(
+	startup_stm32h750xx.s
+
+	Src/main.c
+  	Src/usbd_msc_scsi.c
+	Src/usb_device.c
+	Src/usbd_desc.c
+	Src/usbd_cdc_if.c
+	Src/usbd_storage_if.c
+	Src/32blit.c
+	Src/CDCLogging.c
+	
+	PROPERTIES LANGUAGE CXX
+)
 
 add_library(BlitHalSTM32 OBJECT ${SOURCES})
 
@@ -99,6 +118,7 @@ set(INCLUDE_DIRS
 	${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/Third_Party/FatFs/src
 	${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/ST/STM32_USB_Device_Library/Core/Inc
 	${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
+	${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc
 	${CMAKE_CURRENT_SOURCE_DIR}/Utilities
 	${CMAKE_CURRENT_SOURCE_DIR}/../32blit
 )
@@ -127,11 +147,8 @@ target_compile_definitions(BlitHalSTM32
     -DCDC_FIFO_BUFFERS=${CDC_FIFO_BUFFERS}
 )
 
-target_compile_options(BlitHalSTM32
-	PRIVATE
-		-fpermissive
-)
 target_compile_options(BlitHalSTM32 PUBLIC "$<$<CONFIG:RELEASE>:-Os>")
+set_target_properties(BlitHalSTM32 PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 # 2nd build for external flash
 add_library(BlitHalSTM32Ext OBJECT ${SOURCES})
@@ -150,16 +167,9 @@ target_compile_definitions(BlitHalSTM32Ext
     -DCDC_FIFO_BUFFERS=${CDC_FIFO_BUFFERS_EXT}
 )
 
-target_compile_options(BlitHalSTM32Ext
-	PRIVATE
-		-fpermissive
-)
-
 set(MCU_LINKER_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/${MCU_LINKER_SCRIPT}")
 set(MCU_LINKER_SCRIPT "${MCU_LINKER_SCRIPT}" PARENT_SCOPE)
 set(MCU_LINKER_SCRIPT_EXT "${CMAKE_CURRENT_LIST_DIR}/${MCU_LINKER_SCRIPT_EXT}" PARENT_SCOPE)
-
-find_package(PythonInterp 3 REQUIRED)
 
 function(blit_executable_common NAME)
 	target_link_libraries(${NAME} BlitEngine)
@@ -180,7 +190,7 @@ function(blit_executable NAME SOURCES)
 		DESTINATION bin
 	)
 
-	set_target_properties(${NAME} PROPERTIES LINK_FLAGS "-specs=nano.specs -T ${MCU_LINKER_SCRIPT} ${MCU_LINKER_FLAGS_EXT}")
+	set_target_properties(${NAME} PROPERTIES LINK_FLAGS "-specs=nano.specs -u _printf_float -T ${MCU_LINKER_SCRIPT} ${MCU_LINKER_FLAGS_EXT}")
 	set_target_properties(${NAME} PROPERTIES LINK_DEPENDS ${MCU_LINKER_SCRIPT} SUFFIX ".elf")
 
 	blit_executable_common(${NAME})
@@ -191,6 +201,8 @@ function(blit_executable NAME SOURCES)
 endfunction()
 
 function(blit_executable_int_flash NAME SOURCES)
+	find_package(PythonInterp 3.6 REQUIRED)
+
 	add_executable(${NAME} $<TARGET_OBJECTS:BlitHalSTM32> ${SOURCES} ${ARGN})
 
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.bin ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.dfu

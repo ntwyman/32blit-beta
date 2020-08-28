@@ -33,6 +33,9 @@ else()
 	# If SDL2 was built using CMake, the generated configuration files define SDL2::* targets instead of the SDL2_* variables
 	if(TARGET SDL2::SDL2)
 		set(SDL2_LIBRARIES SDL2::SDL2 SDL2::SDL2main)
+	# handle SDL2 built with only a static library
+	elseif(TARGET SDL2::SDL2-static)
+		set(SDL2_LIBRARIES SDL2::SDL2-static SDL2::SDL2main)
 	else()
 		target_include_directories(BlitHalSDL
 			PRIVATE	${SDL2_INCLUDE_DIRS}
@@ -97,15 +100,12 @@ if(DEFINED VIDEO_CAPTURE AND VIDEO_CAPTURE)
 	find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
 	find_library(AVUTIL_LIBRARY avutil)
 
-	find_path(AVDEVICE_INCLUDE_DIR libavdevice/avdevice.h)
-	find_library(AVDEVICE_LIBRARY avdevice)
-
 	find_library(SWRESAMPLE_LIBRARY swresample)
 
 	find_library(SWSCALE_LIBRARY swscale)
 
-	target_include_directories(BlitHalSDL PRIVATE ${AVCODEC_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${AVDEVICE_INCLUDE_DIR})
-	target_link_libraries(BlitHalSDL PUBLIC ${AVCODEC_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${AVDEVICE_LIBRARY} ${SWRESAMPLE_LIBRARY} ${SWSCALE_LIBRARY})
+	target_include_directories(BlitHalSDL PRIVATE ${AVCODEC_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR})
+	target_link_libraries(BlitHalSDL PUBLIC ${AVCODEC_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${SWRESAMPLE_LIBRARY} ${SWSCALE_LIBRARY})
 
 	target_sources(BlitHalSDL PRIVATE VideoCapture.cpp VideoCaptureFfmpeg.cpp)
 
@@ -132,7 +132,10 @@ function(blit_executable NAME SOURCES)
 	endif()
 
 	if(EMSCRIPTEN)
-		set_target_properties(${NAME} PROPERTIES SUFFIX ".html")
+		set_target_properties(${NAME} PROPERTIES
+			SUFFIX ".html"
+			LINK_FLAGS "-s ENVIRONMENT=web -s SDL2_IMAGE_FORMATS=['jpg']"
+		)
 	endif()
 endfunction()
 

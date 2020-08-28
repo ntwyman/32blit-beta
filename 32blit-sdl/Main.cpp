@@ -24,7 +24,7 @@
 
 static bool running = true;
 
-SDL_Window* window = NULL;
+SDL_Window* window = nullptr;
 
 System *blit_system;
 Input *blit_input;
@@ -63,16 +63,16 @@ void handle_event(SDL_Event &event) {
 		case SDL_KEYDOWN: // fall-though
 		case SDL_KEYUP:
 			if (!blit_input->handle_keyboard(event.key.keysym.sym, event.type == SDL_KEYDOWN)) {
-				switch (event.key.keysym.sym) {
 #ifdef VIDEO_CAPTURE
+				switch (event.key.keysym.sym) {
 				case SDLK_r:
 					if (event.type == SDL_KEYDOWN && SDL_GetTicks() - last_record_startstop > 1000) {
 						if (blit_capture->recording()) blit_capture->stop();
 						else blit_capture->start();
 						last_record_startstop = SDL_GetTicks();
 					}
-#endif
 				}
+#endif
 			}
 			break;
 
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
 	);
 
-	if (window == NULL) {
+	if (window == nullptr) {
 		fprintf(stderr, "could not create window: %s\n", SDL_GetError());
 		return 1;
 	}
