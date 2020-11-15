@@ -2,6 +2,8 @@
 #include "32blit.hpp"
 #include <cstdint>
 
+enum GameState {HOW_MANY, READY_PLAYER, LEVEL, GAME_OVER};
+
 // Game frame rate was 3/100ths of a second
 #define UPDATE_INTERVAL_MS 60
 
@@ -24,8 +26,8 @@
 #define BUTTON_LEFT 0x02u
 #define BUTTON_DOWN 0x04u
 #define BUTTON_UP 0x08u
-#define BUTTON_JUMP 0x10u
-#define BUTTONS_ALL (BUTTON_RIGHT | BUTTON_LEFT | BUTTON_DOWN | BUTTON_UP | BUTTON_JUMP)
+#define BUTTON_A 0x10u
+#define BUTTONS_ALL (BUTTON_RIGHT | BUTTON_LEFT | BUTTON_DOWN | BUTTON_UP | BUTTON_A)
 
 /* extern uint8_t buttons;
 extern uint8_t button_ack;
@@ -59,11 +61,12 @@ struct Henry {
 };
 
 struct Player {
+  uint8_t lives;
+  uint8_t level;
   uint8_t score[8];
   uint8_t bonus[4];
   uint8_t egg[16];
   uint8_t grain[16];
-  int lives;
 };
 
 // NOTE: EAT1 should never be rendered but is used in the state
@@ -100,7 +103,8 @@ private:
     tiles[y * COLUMNS + x] |= contents;
   }
 
-  void loadLevel(unsigned int);
+  void startGame();
+  void loadLevel();
   void renderBackground(blit::Surface &);
   void renderDucks(blit::Surface &);
   void renderHenry(blit::Surface &);
@@ -132,16 +136,18 @@ private:
   blit::Point tilePosition(blit::Point &);
   blit::Point tilePosition(int, int);
 
+  GameState state = GameState::HOW_MANY;
+
   // Screen
   blit::Size screenSize;
+
 
   // Uodate timing
   uint32_t lastTime;
 
   // input
   uint16_t buttonsDown;
-  uint16_t buttonMask; // ???
-  // int numPlayers
+  uint16_t newDown;
 
   // Level info
   bool hasLift;
@@ -155,6 +161,8 @@ private:
   // state
   bool isDead;
   uint8_t currentLevel;
+  uint8_t numPlayers = 1;
+  uint8_t activePlayers;
   uint8_t currentPlayer;
   uint8_t eggsLeft;
   uint8_t duckTimer;

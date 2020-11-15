@@ -26,10 +26,25 @@ bool Game::isTileWall(int x, int y) {
     return (this->getTile(x, y) & TILE_WALL) != 0;
 }
 
-void Game::loadLevel(unsigned int levelNumber) {
+
+void Game::startGame() {
+    this->activePlayers = this->numPlayers;
+    for (int i=0; i< this->numPlayers; i++) {
+        memset(&this->playerData[i], 0, sizeof(Player));
+        this->playerData[i].lives = 5;
+    }
+    this->currentLevel = 0;
+    this->currentPlayer = 0;
+    this->state = GameState::READY_PLAYER;
+}
+
+void Game::loadLevel() {
 
     // Clear out the existing tiles
     memset(&this->tiles[0], 0, sizeof(this->tiles));
+
+    Player &player = this->playerData[this->currentPlayer];
+    unsigned int levelNumber = player.level;
     this->hasBigDuck = levelNumber > 7;
 
     unsigned int speed = levelNumber >> 4;
@@ -137,7 +152,7 @@ void Game::loadLevel(unsigned int levelNumber) {
     h.state = HenryState::WALK; // player_mode = PLAYER_WALK
     h.priorState = HenryState::WALK;
     h.dir = DIR_R;
-    this->buttonMask = BUTTONS_ALL;
+    // this->buttonMask = BUTTONS_ALL;
     debugf("Loaded level %d, Has lift: %s\r\n", this->currentLevel, this->hasLift ? "true" : "false");
     if (this->hasLift) {
         debugf("X: %d, Y0: %d, Y1: %d\r\n", this->liftX, this->liftY[0], this->liftY[1]);
@@ -263,8 +278,8 @@ void Game::renderHenry(Surface &s) {
 
     Henry &h = this->henry;
     SpriteTransform flip = NONE;
-    Rect *sequence;
-    unsigned int spriteIndex;
+    Rect *sequence= nullptr;
+    unsigned int spriteIndex = 0;
 
     if ((h.dir & (DIR_UP | DIR_DOWN)) != 0) { // Not going left or right
         sequence = SpriteHenryClimbs;
@@ -347,8 +362,10 @@ void Game::pollKeys() {
         down |= BUTTON_DOWN;
     }
     if (pressed(Button::A | Button::JOYSTICK)) {
-        down |= BUTTON_JUMP;
+        down |= BUTTON_A;
     }
+    uint16_t changed = this->buttonsDown ^ down;
+    this->newDown = changed & down;
     this->buttonsDown = down;
 }
 
@@ -532,10 +549,9 @@ void Game::fallHenry(Henry &h) {
 }
 
 bool Game::startJump(Henry &h) {
-    if ((buttons & BUTTON_JUMP) == 0) {
+    if ((this->newDown & BUTTON_A) == 0) {
         return false;
     }
-    this->buttonMask |= BUTTON_JUMP; // FOR NOW What is this ?
     h.falling = 0;
     h.state = HenryState::JUMP;
     h.sliding = h.speed.x;
@@ -956,10 +972,7 @@ void Game::reduceBonus() {
 }
 void Game::SetScreenSize(blit::Size &size) {
     this->screenSize = size;
-    this->loadLevel(0);
 }
-
-static bool is_pressed = false;
 
 void Game::Tickle(uint32_t time)
 /*
@@ -970,38 +983,53 @@ The Update tick - runs roughly every 10 ms
     if (this->lastTime == 0) {
         this->lastTime = time;
     }
-
-    // Wait until roughly 3/100ths of a second has gone by
     if ((time - this->lastTime) < UPDATE_INTERVAL_MS) {
         return;
     }
 
     this->pollKeys();
-    this->moveHenry();
-    this->moveLifts();
-    this->moveDucks();
-    this->detectCollisions();
+    switch (this->state) {
+        case GameState::HOW_MANY:
+            if ((this->newDown & BUTTON_UP) && (this->numPlayers < MAX_PLAYERS)) {
+                this->numPlayers ++;
+            } else if ((this->newDown & BUTTON_DOWN) && (this->numPlayers > 1)) {
+                this->numPlayers --;
+            }
+            if (this->newDown & BUTTON_A) {
+                debugf("Starting Game\r\n");
+                this->startGame();
+            }
+            break;
+        case GameState::READY_PLAYER:
+            if (this->newDown & BUTTON_A) {
+                this->loadLevel();
+                this->state = GameState::LEVEL;
+            }
+            break;
+        case GameState::GAME_OVER:
+            if (this->newDown & BUTTON_A) {
 
-    if (pressed(Button::X)) {
-        if (!is_pressed) {
-            this->loadLevel(this->currentLevel +1);
-            is_pressed = true;
-            return;
+                
+            }
+            break;
+        case GameState::LEVEL:
+            this->moveHenry();
+            this->moveLifts();
+            this->moveDucks();
+            this->detectCollisions();
+
+            if (this->henry.pos.y > 229 || this->isDead) { // DED
+                this->state = GameState::GAME_OVER;
+                break;
+            }
+            if (this->eggsLeft == 0) {
+                while (this->bonus > 0) {
+                    this->reduceBonus();
+                    this->addScore(10);
+                }
+            }
+            break;
         }
-    } else {
-        is_pressed = false;
-    }
-    if (this->henry.pos.y > 229) {
-        this->loadLevel(this->currentLevel);
-    }
-    if (this->isDead) {
-        loadLevel(this->currentLevel);
-    } else if (this->eggsLeft == 0) {
-        while (this->bonus > 0) {
-            this->reduceBonus();
-            this->addScore(10);
-        }
-    }
         //        /* Level complete */
 //        while (!zero_bonus) {
 //            AddScore(6, 1);
@@ -1028,9 +1056,27 @@ void Game::Render(Surface &s) {
     /*
      Render callback is roughly every 25 ms
     */
-    this->renderBackground(s);
-    this->renderDucks(s);
-    this->renderHenry(s);
-    this->renderLifts(s);
-    this->renderBigBird(s);
+
+    s.pen = Pen(255,255,255);
+    char buf[0x20];
+    switch (this->state) {
+        case GameState::HOW_MANY:
+            sprintf(buf, "How many players? %d", this->numPlayers);
+            s.text(buf, minimal_font, Point(5, 4));
+            break;
+        case GameState::READY_PLAYER:
+            sprintf(buf, "Ready Player? %d", this->currentPlayer + 1);
+            s.text(buf, minimal_font, Point(5, 4));
+            break;
+        case GameState::LEVEL:
+            this->renderBackground(s);
+            this->renderDucks(s);
+            this->renderHenry(s);
+            this->renderLifts(s);
+            this->renderBigBird(s);
+            break;
+        case GameState::GAME_OVER:
+            sprintf(buf, "Game Over Player %d", this->currentPlayer + 1);
+            s.text(buf, minimal_font, Point(5, 4));
+    }
 }
